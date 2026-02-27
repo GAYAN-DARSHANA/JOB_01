@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema({
   category: { type: String, required: true },
   stock: { type: Number, default: 0 },
   image: { type: String, default: '' },
+  relatedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }] // Linked products
 }, { timestamps: true });
 
 const Product = mongoose.model('Product', productSchema);

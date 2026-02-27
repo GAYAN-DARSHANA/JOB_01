@@ -10,42 +10,33 @@ function AdminDashboard() {
     totalUsers: 0,
     totalRevenue: 0
   });
-
   const [recentOrders, setRecentOrders] = useState([]);
   const { token } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (token) {
-      fetchStats();
-      fetchRecentOrders();
-    }
-  }, [token]);
+    fetchStats();
+    fetchRecentOrders();
+  }, []);
 
   const fetchStats = async () => {
     try {
-      const { data } = await axios.get(
-        'http://localhost:5001/api/admin/stats',
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      setStats(data || {});
+      const { data } = await axios.get('http://localhost:5001/api/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(data);
     } catch (error) {
-      console.error('Failed to fetch stats', error);
+      console.error('Failed to fetch stats');
     }
   };
 
   const fetchRecentOrders = async () => {
     try {
-      const { data } = await axios.get(
-        'http://localhost:5001/api/admin/orders',
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      setRecentOrders(Array.isArray(data) ? data.slice(0, 5) : []);
+      const { data } = await axios.get('http://localhost:5001/api/admin/orders', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRecentOrders(data.slice(0, 5));
     } catch (error) {
-      console.error('Failed to fetch orders', error);
+      console.error('Failed to fetch orders');
     }
   };
 
@@ -60,84 +51,61 @@ function AdminDashboard() {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
+  const StatCard = ({ title, value, icon, color }) => (
+    <div className={`${color} text-white p-6 rounded-2xl shadow-lg`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-white/80 text-sm font-medium mb-1">{title}</p>
+          <p className="text-3xl font-bold">{value}</p>
+        </div>
+        <div className="text-4xl opacity-80">{icon}</div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="container mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-8">Admin Dashboard</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-blue-600 text-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Total Orders</h3>
-          <p className="text-3xl font-bold">{stats.totalOrders}</p>
-        </div>
-
-        <div className="bg-green-600 text-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Products</h3>
-          <p className="text-3xl font-bold">{stats.totalProducts}</p>
-        </div>
-
-        <div className="bg-purple-600 text-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Users</h3>
-          <p className="text-3xl font-bold">{stats.totalUsers}</p>
-        </div>
-
-        <div className="bg-orange-600 text-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Revenue</h3>
-          <p className="text-3xl font-bold">
-            ${(stats.totalRevenue ?? 0).toFixed(2)}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow mb-8">
-        <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
-        <div className="flex gap-4">
-          <Link
-            to="/admin/products"
-            className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
-          >
-            Manage Products
-          </Link>
-
-          <Link
-            to="/admin/orders"
-            className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
-          >
-            View All Orders
-          </Link>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow">
-        <h3 className="text-xl font-bold p-6 border-b">Recent Orders</h3>
-
-        {recentOrders.map((order) => (
-          <div key={order._id} className="p-6 border-b last:border-0">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <p className="font-semibold">
-                  Order by {order.user?.name || 'Unknown'}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {order.createdAt
-                    ? new Date(order.createdAt).toLocaleDateString()
-                    : '—'}
-                </p>
-              </div>
-
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                  order.status
-                )}`}
-              >
-                {order.status?.toUpperCase() || 'UNKNOWN'}
-              </span>
-            </div>
-
-            <p className="text-lg font-bold">
-              ${(order.totalAmount ?? 0).toFixed(2)}
-            </p>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-6">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold">Admin Dashboard</h2>
+          <div className="flex gap-4">
+            <Link to="/admin/products" className="btn-primary bg-purple-600 hover:bg-purple-700">
+              Manage Products
+            </Link>
+            <Link to="/admin/orders" className="btn-primary">
+              All Orders
+            </Link>
           </div>
-        ))}
+        </div>
+        
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard title="Total Orders" value={stats.totalOrders} icon="📦" color="bg-blue-600" />
+          <StatCard title="Products" value={stats.totalProducts} icon="🏷️" color="bg-green-600" />
+          <StatCard title="Users" value={stats.totalUsers} icon="👥" color="bg-purple-600" />
+          <StatCard title="Revenue" value={`$${stats.totalRevenue.toFixed(0)}`} icon="💰" color="bg-orange-600" />
+        </div>
+
+        {/* Recent Orders */}
+        <div className="card">
+          <div className="p-6 border-b">
+            <h3 className="text-xl font-bold">Recent Orders</h3>
+          </div>
+          {recentOrders.map(order => (
+            <div key={order._id} className="p-6 border-b last:border-0 flex justify-between items-center hover:bg-gray-50 transition-colors">
+              <div>
+                <p className="font-semibold">{order.user?.name || 'Unknown'}</p>
+                <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}>
+                  {order.status}
+                </span>
+                <span className="font-bold text-lg">${order.totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
